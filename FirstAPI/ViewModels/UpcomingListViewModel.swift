@@ -7,6 +7,8 @@
 import Foundation
 
 final class UpcomingListViewModel: MovieListViewModel {
+    var isWatchlist: [AccountStateDto] = []
+    
     
     var callback: ((MovieListViewState) -> Void)?
     
@@ -23,10 +25,6 @@ final class UpcomingListViewModel: MovieListViewModel {
     func getMovies() {
         upcomingConfigure()
     }
-    func didSelectMovie(at index: Int) {
-        addtoWatchlist(id: index)
-        
-    }
     func upcomingConfigure() {
         callback?(.loading)
         MovieApiService.shared.getUpcoming(page: 1, completion: {
@@ -42,13 +40,13 @@ final class UpcomingListViewModel: MovieListViewModel {
             }
         })
     }
-     func addtoWatchlist(id: Int) {
+     func addtoWatchlist(id: Int,state: Bool) {
         callback?(.loading)
         AccountApiService.shared.addToWatchlist(
             requestModel: .init(
                 mediaType: "movie",
                 mediaId: id,
-                watchlist: true
+                watchlist: state
             ),
             completion: {
                 [weak self] result in
@@ -58,6 +56,7 @@ final class UpcomingListViewModel: MovieListViewModel {
                     case .success(let model):
                     if model.success && model.statusMessage?.isEmpty == false{
                         self.callback?(.message(model.statusMessage!))
+                        self.callback?(.reload)
                     }
                 case .failure(let error):
                     self.callback?(.message(error.localizedDescription))
@@ -65,4 +64,15 @@ final class UpcomingListViewModel: MovieListViewModel {
             }
         )
     }
+    func getAccountState(movieId: Int, completion: @escaping (AccountStateDto?) -> Void) {
+        AccountApiService.shared.fetchUserState(movieId: movieId) { result in
+            switch result {
+            case .success(let dto):
+                completion(dto)
+            case .failure:
+                completion(nil)
+            }
+        }
+    }
+    
 }

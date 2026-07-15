@@ -8,6 +8,8 @@
 import Foundation
 
 final class PopularListViewModel: MovieListViewModel {
+    var isWatchlist: [AccountStateDto] = []
+    
     var callback: ((MovieListViewState) -> Void)?
     
     var movies: [MovieDto] = []
@@ -23,17 +25,13 @@ final class PopularListViewModel: MovieListViewModel {
     func getMovies() {
         popularmoviesConfigure()
     }
-    func didSelectMovie(at index: Int) {
-      
-        addtoWatchlist(id: index)
-    }
-     func addtoWatchlist(id: Int) {
+     func addtoWatchlist(id: Int,state: Bool) {
         callback?(.loading)
         AccountApiService.shared.addToWatchlist(
             requestModel: .init(
                 mediaType: "movie",
                 mediaId: id,
-                watchlist: true
+                watchlist: state
             ),
             completion: {
                 [weak self] result in
@@ -43,6 +41,7 @@ final class PopularListViewModel: MovieListViewModel {
                     case .success(let model):
                     if model.success && model.statusMessage?.isEmpty == false{
                         self.callback?(.message(model.statusMessage!))
+                        self.callback?(.reload)
                     }
                 case .failure(let error):
                     self.callback?(.message(error.localizedDescription))
@@ -50,6 +49,7 @@ final class PopularListViewModel: MovieListViewModel {
             }
         )
     }
+    
     func popularmoviesConfigure() {
         callback?(.loading)
         MovieApiService.shared.getPopular(page: 1, completion: {
@@ -64,5 +64,15 @@ final class PopularListViewModel: MovieListViewModel {
                 callback?(.message(error.localizedDescription))
             }
         })
+    }
+    func getAccountState(movieId: Int, completion: @escaping (AccountStateDto?) -> Void) {
+        AccountApiService.shared.fetchUserState(movieId: movieId) { result in
+            switch result {
+            case .success(let dto):
+                completion(dto)
+            case .failure:
+                completion(nil)
+            }
+        }
     }
 }

@@ -8,9 +8,13 @@
 import Foundation
 
 final class WatchListViewModel: MovieListViewModel {
-    func didSelectMovie(at index: Int) {
+    
+    var isWatchlist: [AccountStateDto] = []
+    
+    func deleteFromWatchlist(id: Int) {
         
     }
+    
     var upcomingMovies: [UpcomingList] = []
     
     var topRatedMovies: [TopRatedList] = []
@@ -30,15 +34,12 @@ final class WatchListViewModel: MovieListViewModel {
         getWatchlistMovies(type: .trend)
         getWatchlistMovies(type: .upcoming)
     }
-    func addtoWatchlist(id: Int) {
-        removeMovie(id: id)
-    }
-    func removeMovie(id: Int) {
+    func addtoWatchlist(id: Int,state: Bool) {
         AccountApiService.shared.addToWatchlist(
             requestModel: .init(
                 mediaType: "movie",
                 mediaId: id,
-                watchlist: false
+                watchlist: state
             ),
             completion: {
                 [weak self] result in
@@ -47,7 +48,10 @@ final class WatchListViewModel: MovieListViewModel {
                 case .success(let model):
                     if model.success == true && model.statusMessage?.isEmpty == false {
                         self.callback?(.message(model.statusMessage!))
+                        self.callback?(.reload)
+                        
                         self.getMovies()
+                       
                     }
                 case .failure(let error):
                 self.callback?(.message(error.localizedDescription))
@@ -55,6 +59,7 @@ final class WatchListViewModel: MovieListViewModel {
             }
         )
     }
+    
     enum MovieListType {
         case nowplaying
         case upcoming
@@ -119,6 +124,16 @@ final class WatchListViewModel: MovieListViewModel {
                 } else if case .failure(_) = result {
                     self.callback?(.message("Failed to get trend movies"))
                 }
+            }
+        }
+    }
+    func getAccountState(movieId: Int, completion: @escaping (AccountStateDto?) -> Void) {
+        AccountApiService.shared.fetchUserState(movieId: movieId) { result in
+            switch result {
+            case .success(let dto):
+                completion(dto)
+            case .failure:
+                completion(nil)
             }
         }
     }

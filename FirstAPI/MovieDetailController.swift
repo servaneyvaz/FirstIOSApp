@@ -94,14 +94,41 @@ final class MovieDetailController: UIViewController {
         label.numberOfLines = 0
         return label
     }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(named: "backColor")
         configure()
+        setupCallbacks()
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         configureNavbar()
+        if let id = movieId {
+                    viewModel.getAccountState(movieId: id) { [weak self] stateDto in
+                        guard let self = self, let dto = stateDto else { return }
+                        DispatchQueue.main.async {
+                            self.isMovieInWatchlist = dto.isWatchlist
+                        }
+                    }
+                }
+    }
+    private func setupCallbacks() {
+        viewModel.callback = { [weak self] state in
+            guard let self = self else { return }
+            switch state {
+            case .loading:
+                self.view.showLoading()
+            case .loaded:
+                self.view.hideLoading()
+            case .reload:
+                DispatchQueue.main.async {
+                    self.isMovieInWatchlist.toggle()
+                }
+            case .message(let text):
+                print("Mesaj: \(text)")
+            }
+        }
     }
     func configureNavbar() {
         navigationController?.setNavigationBarHidden(true, animated: false)
@@ -115,11 +142,22 @@ final class MovieDetailController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     private var movieId: Int?
+    private var isMovieInWatchlist: Bool = false {
+            didSet {
+    
+                saveButton.isSelected = isMovieInWatchlist
+              
+                saveButton.tintColor = isMovieInWatchlist ? .orange : .white
+            }
+        }
     @objc func addToWatchlist() {
-        guard let id = movieId else {return}
-        saveButton.isSelected.toggle()
-        viewModel.addtoWatchlist(id: id)
-    }
+            guard let id = movieId else { return }
+            
+            let targetState = !isMovieInWatchlist
+           
+            viewModel.addtoWatchlist(id: id, state: targetState)
+        }
+    
     @objc func backToHome() {
         navigationController?.popViewController(animated: true)
     }

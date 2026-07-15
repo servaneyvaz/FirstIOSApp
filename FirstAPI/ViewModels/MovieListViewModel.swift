@@ -18,7 +18,10 @@ protocol MovieListViewModel: AnyObject {
     var topRatedMovies: [TopRatedList] { get }
     var popularMovies: [PopularMovieList] { get }
     var trendMovies: [TrendMovieList] { get }
+    var isWatchlist: [AccountStateDto] { get }
     func getMovies()
-    func didSelectMovie(at index: Int)
-    func addtoWatchlist(id: Int)
+    
+    func addtoWatchlist(id: Int,state: Bool)
+    func getAccountState(movieId: Int, completion: @escaping (AccountStateDto?) -> Void)
+    
 }
