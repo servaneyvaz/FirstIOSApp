@@ -15,7 +15,4 @@ final class AccountApiService {
     func getToWatchList<T: Decodable>(page: Int, completion: @escaping (Result<T, Error>) -> Void) {
         NetworkManager.shared.request(endpoint: AccoundEndpoint.getWatchlistMovies(page: page), completion: completion)
     }
-    func fetchUserState(movieId: Int, completion: @escaping (Result<AccountStateDto, Error>) -> Void) {
-        NetworkManager.shared.request(endpoint: AccoundEndpoint.accountState(movieId: movieId), completion: completion)
-    }
 }

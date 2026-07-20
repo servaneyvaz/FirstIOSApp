@@ -26,4 +26,7 @@ final class MovieApiService {
     func getTrending(page: Int, completion: @escaping (Result<TrendMoviesDto,Error>) -> Void ) {
         NetworkManager.shared.request(endpoint: MovieEndpoint.trendMovies(page: page), completion: completion)
     }
+    func getPersonDetails(id: Int, completion: @escaping (Result<TrendMoviesDto,Error>) -> Void ) {
+        NetworkManager.shared.request(endpoint: MovieEndpoint.personDetails(id: id), completion: completion)
+    }
 }

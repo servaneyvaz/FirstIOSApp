@@ -8,46 +8,22 @@
 import Foundation
 
 final class PopularListViewModel: MovieListViewModel {
-    var isWatchlist: [AccountStateDto] = []
+    var persons: [MoviePresentable] = []
     
     var callback: ((MovieListViewState) -> Void)?
     
-    var movies: [MovieDto] = []
+    private(set) var movies: [MoviePresentable] = []
     
-    var upcomingMovies: [UpcomingList] = []
     
-    var topRatedMovies: [TopRatedList] = []
-    
-    var popularMovies: [PopularMovieList] = []
-    
-    var trendMovies: [TrendMovieList] = []
+    func getPerson() {
+        getPersons()
+    }
     
     func getMovies() {
         popularmoviesConfigure()
     }
-     func addtoWatchlist(id: Int,state: Bool) {
-        callback?(.loading)
-        AccountApiService.shared.addToWatchlist(
-            requestModel: .init(
-                mediaType: "movie",
-                mediaId: id,
-                watchlist: state
-            ),
-            completion: {
-                [weak self] result in
-                guard let self else { return }
-                callback?(.loaded)
-                switch result {
-                    case .success(let model):
-                    if model.success && model.statusMessage?.isEmpty == false{
-                        self.callback?(.message(model.statusMessage!))
-                        self.callback?(.reload)
-                    }
-                case .failure(let error):
-                    self.callback?(.message(error.localizedDescription))
-                }
-            }
-        )
+    func didSelectMovie(at index: Int) {
+        addtoWatchlist(id: index)
     }
     
     func popularmoviesConfigure() {
@@ -58,21 +34,28 @@ final class PopularListViewModel: MovieListViewModel {
             self.callback?(.loaded)
             switch result {
             case .success(let movies):
-                self.popularMovies = movies.results ?? []
+                self.movies = movies.results ?? []
                 self.callback?(.reload)
             case .failure(let error):
                 callback?(.message(error.localizedDescription))
             }
         })
     }
-    func getAccountState(movieId: Int, completion: @escaping (AccountStateDto?) -> Void) {
-        AccountApiService.shared.fetchUserState(movieId: movieId) { result in
+    
+    func getPersons() {
+        callback?(.loading)
+        MovieApiService.shared.getPersonDetails(id: 1, completion: {
+            [weak self] result in
+            guard let self else { return }
+            callback?(.loaded)
+            
             switch result {
-            case .success(let dto):
-                completion(dto)
-            case .failure:
-                completion(nil)
+            case .success(let persons):
+                self.persons = persons.results ?? []
+                callback?(.reload)
+            case .failure(let error):
+                callback?(.message(error.localizedDescription))
             }
-        }
+        })
     }
 }

@@ -73,12 +73,19 @@ final class MovieDetailController: UIViewController {
     }()
     private lazy var cast: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 17, weight: .bold)
+        label.font = .systemFont(ofSize: 12, weight: .bold)
         label.text = "Cast"
         let gesture = UITapGestureRecognizer(target: self, action: #selector(tapcast))
         label.addGestureRecognizer(gesture)
         label.isUserInteractionEnabled = true
         label.textColor = .white
+        label.numberOfLines = 0
+        return label
+    }()
+    private lazy var releaseText: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .lightGray
         label.numberOfLines = 0
         return label
     }()
@@ -101,18 +108,12 @@ final class MovieDetailController: UIViewController {
         configure()
         setupCallbacks()
     }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         configureNavbar()
-        if let id = movieId {
-                    viewModel.getAccountState(movieId: id) { [weak self] stateDto in
-                        guard let self = self, let dto = stateDto else { return }
-                        DispatchQueue.main.async {
-                            self.isMovieInWatchlist = dto.isWatchlist
-                        }
-                    }
-                }
     }
+    
     private func setupCallbacks() {
         viewModel.callback = { [weak self] state in
             guard let self = self else { return }
@@ -143,20 +144,19 @@ final class MovieDetailController: UIViewController {
     }
     private var movieId: Int?
     private var isMovieInWatchlist: Bool = false {
-            didSet {
-    
-                saveButton.isSelected = isMovieInWatchlist
-              
-                saveButton.tintColor = isMovieInWatchlist ? .orange : .white
-            }
-        }
-    @objc func addToWatchlist() {
-            guard let id = movieId else { return }
+        didSet {
             
-            let targetState = !isMovieInWatchlist
-           
-            viewModel.addtoWatchlist(id: id, state: targetState)
+            saveButton.isSelected = isMovieInWatchlist
+            
+            saveButton.tintColor = isMovieInWatchlist ? .orange : .white
         }
+    }
+    
+    @objc func addToWatchlist() {
+        guard let id = movieId else {return}
+        saveButton.isSelected.toggle()
+        viewModel.addtoWatchlist(id: id)
+    }
     
     @objc func backToHome() {
         navigationController?.popViewController(animated: true)
@@ -177,8 +177,11 @@ final class MovieDetailController: UIViewController {
         return customSaveButton
     }()
     func configure() {
-        view.addSubviews(backPosterView,posterView,posterLabel,ratingView,ratingLabel,overview,review,cast,scrollLine,overviewLabel,backButton,saveButton)
+        view.addSubviews(backPosterView,posterView,posterLabel,ratingView,ratingLabel,overview,review,cast,scrollLine,overviewLabel,backButton,saveButton,releaseText)
         ratingView.addSubview(ratingStar)
+        releaseText
+            .top(posterView.bottomAnchor,5).0
+            .leading(posterView.centerXAnchor)
         ratingStar
             .centerY(ratingView.centerYAnchor).0
             .leading(ratingView.leadingAnchor,8).0
@@ -229,28 +232,56 @@ final class MovieDetailController: UIViewController {
             .top(view.safeAreaLayoutGuide.topAnchor,20).0
             .width(25).0 .height(25)
     }
+    private var currentCastVC: CastController?
+
     @objc func tapabout() {
         scrollConstraint.constant = 35
         overviewLabel.isHidden = false
+        
+        currentCastVC?.view.isHidden = true
+        
         UIView.animate(withDuration: 0.5) {
             self.view.layoutIfNeeded()
         }
     }
+    
     @objc func tapreview() {
         scrollConstraint.constant = 163
         overviewLabel.isHidden = true
+        
+        currentCastVC?.view.isHidden = true
+        
         UIView.animate(withDuration: 0.5) {
             self.view.layoutIfNeeded()
         }
     }
     @objc func tapcast() {
-        scrollConstraint.constant = 250
-        overviewLabel.isHidden = true
-        UIView.animate(withDuration: 0.5) {
-            self.view.layoutIfNeeded()
+            scrollConstraint.constant = 250
+            overviewLabel.isHidden = true
+            
+            UIView.animate(withDuration: 0.5) {
+                self.view.layoutIfNeeded()
+            }
+            
+            if let existingCastVC = currentCastVC {
+                existingCastVC.view.isHidden = false
+                return
+            }
+        
+            let castVC = CastController(castViewModels: [self.viewModel])
+            self.currentCastVC = castVC
+            
+            addChild(castVC)
+            view.addSubview(castVC.view)
+            castVC.didMove(toParent: self)
+            
+            castVC.view
+                .top(scrollLine.bottomAnchor, 15).0
+                .leading(view.leadingAnchor).0
+                .trailing(view.trailingAnchor).0
+                .bottom(view.safeAreaLayoutGuide.bottomAnchor)
         }
-    }
-    func configure(id: Int,data: String?, data1: String?,data2: String?,data3: Double?,data4: String?) {
+    func configure(id: Int,data: String?, data1: String?,data2: String?,data3: Double?,data4: String?,release: String?) {
         self.movieId = id
         backPosterView.image = nil
         posterView.image = nil
@@ -292,6 +323,23 @@ final class MovieDetailController: UIViewController {
         if let data4 {
             overviewLabel.text = data4
         }
+        if let release {
+            releaseText.text = release
+        }
+        viewModel.getPerson()
+        
+        viewModel.callback = { [weak self] state in
+            guard let self else { return }
+            switch state {
+            case .reload:
+                DispatchQueue.main.async {
+                    print("Cast datası uğurla yükləndi: \(self.viewModel.persons.count) nəfər")
+                }
+            default:
+                break
+            }
+        }
+        
     }
     private var scrollConstraint: NSLayoutConstraint!
 }

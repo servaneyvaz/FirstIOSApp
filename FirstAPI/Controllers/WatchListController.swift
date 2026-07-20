@@ -87,6 +87,6 @@ extension WatchListController: UICollectionViewDelegate, UICollectionViewDataSou
         let controller = MovieDetailController(viewModel: self.viewModel)
         navigationController?.pushViewController(controller, animated: true)
         controller.configure(id: viewModel.movies[indexPath.item].id ?? 0, data: viewModel.movies[indexPath.item].backdropPathURL, data1: viewModel.movies[indexPath.item].posterPathUrl, data2: viewModel.movies[indexPath.item].posterTitle, data3: viewModel.movies[indexPath.item].ratingAverage, data4: viewModel
-            .movies[indexPath.item].aboutmovie)
+            .movies[indexPath.item].aboutmovie, release: viewModel.movies[indexPath.item].releaseDate?.split(separator: "-").first.map(String.init))
     }
 }

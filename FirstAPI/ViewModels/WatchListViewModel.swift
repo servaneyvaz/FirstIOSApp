@@ -1,48 +1,53 @@
-//
-//  WatchListViewModel.swift
-//  FirstAPI
-//
-//  Created by Servan on 01.07.26.
-//
-
 import Foundation
-
 final class WatchListViewModel: MovieListViewModel {
-    
-    var isWatchlist: [AccountStateDto] = []
-    
-    func deleteFromWatchlist(id: Int) {
-        
+    func getPerson() {
+        getPersons()
     }
     
-    var upcomingMovies: [UpcomingList] = []
-    
-    var topRatedMovies: [TopRatedList] = []
-    
-    var popularMovies: [PopularMovieList] = []
-    
-    var trendMovies: [TrendMovieList] = []
+    var persons: [MoviePresentable] = []
     
     var callback: ((MovieListViewState) -> Void)?
     
-    var movies: [MovieDto] = []
+    private(set) var movies: [MoviePresentable] = []
+    
+    func didSelectMovie(at index: Int) {
+        
+    }
     
     func getMovies() {
+        self.movies.removeAll()
         getWatchlistMovies(type: .nowplaying)
-        getWatchlistMovies(type: .popular)
-        getWatchlistMovies(type: .topRated)
-        getWatchlistMovies(type: .trend)
-        getWatchlistMovies(type: .upcoming)
     }
-    func addtoWatchlist(id: Int,state: Bool) {
+    
+    func addtoWatchlist(id: Int) {
+        removeMovie(id: id)
+    }
+    
+    func getPersons() {
+        callback?(.loading)
+        MovieApiService.shared.getPersonDetails(id: 1, completion: {
+            [weak self] result in
+            guard let self else { return }
+            callback?(.loaded)
+            
+            switch result {
+            case .success(let persons):
+                self.persons = persons.results ?? []
+                callback?(.reload)
+            case .failure(let error):
+                callback?(.message(error.localizedDescription))
+            }
+        })
+    }
+    
+    func removeMovie(id: Int) {
         AccountApiService.shared.addToWatchlist(
             requestModel: .init(
                 mediaType: "movie",
                 mediaId: id,
-                watchlist: state
+                watchlist: false
             ),
-            completion: {
-                [weak self] result in
+            completion: { [weak self] result in
                 guard let self else { return }
                 switch result {
                 case .success(let model):
@@ -54,7 +59,7 @@ final class WatchListViewModel: MovieListViewModel {
                        
                     }
                 case .failure(let error):
-                self.callback?(.message(error.localizedDescription))
+                    self.callback?(.message(error.localizedDescription))
                 }
             }
         )
@@ -69,71 +74,15 @@ final class WatchListViewModel: MovieListViewModel {
     }
     private func getWatchlistMovies(type: MovieListType) {
         callback?(.loading)
-        switch type {
-        case .nowplaying:
-            AccountApiService.shared.getToWatchList(page: 1) { [weak self] (result: Result<NowPlayingDto, Error>) in
-                guard let self else { return }
-                self.callback?(.loaded)
-                if case .success(let dto) = result {
-                    self.movies = dto.results ?? []
-                    self.callback?(.reload)
-                } else if case .failure(_) = result {
-                    self.callback?(.message("Failed to get now playing movies"))
-                }
-            }
-        case .upcoming:
-            AccountApiService.shared.getToWatchList(page: 1) { [weak self] (result: Result<UpcomingDto, Error>) in
-                guard let self else { return }
-                self.callback?(.loaded)
-                if case .success(let dto) = result {
-                    self.upcomingMovies = dto.results ?? []
-                    self.callback?(.reload)
-                } else if case .failure(_) = result {
-                    self.callback?(.message("Failed to get upcoming movies"))
-                }
-            }
-        case .topRated:
-            AccountApiService.shared.getToWatchList(page: 1) { [weak self] (result: Result<TopRatedDto, Error>) in
-                guard let self else { return }
-                self.callback?(.loaded)
-                if case .success(let dto) = result {
-                    self.topRatedMovies = dto.results ?? []
-                    self.callback?(.reload)
-                } else if case .failure(_) = result {
-                    self.callback?(.message("Failed to get top rated movies"))
-                }
-            }
-        case .popular:
-            AccountApiService.shared.getToWatchList(page: 1) { [weak self] (result: Result<PopularMoviesDto, Error>) in
-                guard let self else { return }
-                self.callback?(.loaded)
-                if case .success(let dto) = result {
-                    self.popularMovies = dto.results ?? []
-                    self.callback?(.reload)
-                } else if case .failure(_) = result {
-                    self.callback?(.message("Failed to get popular movies"))
-                }
-            }
-        case .trend:
-            AccountApiService.shared.getToWatchList(page: 1) { [weak self] (result: Result<TrendMoviesDto, Error>) in
-                guard let self else { return }
-                self.callback?(.loaded)
-                if case .success(let dto) = result {
-                    self.trendMovies = dto.results ?? []
-                    self.callback?(.reload)
-                } else if case .failure(_) = result {
-                    self.callback?(.message("Failed to get trend movies"))
-                }
-            }
-        }
-    }
-    func getAccountState(movieId: Int, completion: @escaping (AccountStateDto?) -> Void) {
-        AccountApiService.shared.fetchUserState(movieId: movieId) { result in
-            switch result {
-            case .success(let dto):
-                completion(dto)
-            case .failure:
-                completion(nil)
+        
+        AccountApiService.shared.getToWatchList(page: 1) { [weak self] (result: Result<NowPlayingDto, Error>) in
+            guard let self else { return }
+            self.callback?(.loaded)
+            if case .success(let dto) = result {
+                self.movies = dto.results ?? []
+                self.callback?(.reload)
+            } else if case .failure(_) = result {
+                self.callback?(.message("Failed to get watchlist"))
             }
         }
     }

@@ -7,24 +7,25 @@
 
 import Foundation
 final class NowPlayingListViewModel: MovieListViewModel {
-    var isWatchlist: [AccountStateDto] = []
-    
-    var upcomingMovies: [UpcomingList] = []
-    
-    var topRatedMovies: [TopRatedList] = []
-    
-    var popularMovies: [PopularMovieList] = []
-    
-    var trendMovies: [TrendMovieList] = []
+    func didSelectMovie(at index: Int) {
+        guard let id = movies[index].id else { return }
+        addtoWatchlist(id: id)
+    }
     
     var callback: ((MovieListViewState) -> Void)?
     
-    private(set) var movies: [MovieDto] = []
+    private(set) var persons: [MoviePresentable] = []
+    
+    private(set) var movies: [MoviePresentable] = []
     
     func getMovies() {
         nowPlayingConfigure()
+        
     }
-   
+    func getPerson() {
+        getPersons()
+    }
+    
     private func nowPlayingConfigure() {
         callback?(.loading)
         MovieApiService.shared.getNowPlaying(page: 1, completion: {
@@ -32,47 +33,30 @@ final class NowPlayingListViewModel: MovieListViewModel {
             guard let self else { return }
             callback?(.loaded)
             
-                switch result {
-                case .success(let movies):
-                    self.movies = movies.results ?? []
-                    callback?(.reload)
-                case .failure(let error):
-                    callback?(.message(error.localizedDescription))
-                }
+            switch result {
+            case .success(let movies):
+                self.movies = movies.results ?? []
+                callback?(.reload)
+            case .failure(let error):
+                callback?(.message(error.localizedDescription))
+            }
         })
     }
-    func addtoWatchlist(id: Int,state: Bool) {
+    
+    func getPersons() {
         callback?(.loading)
-        AccountApiService.shared.addToWatchlist(
-            requestModel: .init(
-                mediaType: "movie",
-                mediaId: id,
-                watchlist: state
-            ),
-            completion: {
-                [weak self] result in
-                guard let self else { return }
-                callback?(.loaded)
-                switch result {
-                    case .success(let model):
-                    if model.success && model.statusMessage?.isEmpty == false{
-                        self.callback?(.message(model.statusMessage!))
-                        self.callback?(.reload)
-                    }
-                case .failure(let error):
-                    self.callback?(.message(error.localizedDescription))
-                }
-            }
-        )
-    }
-    func getAccountState(movieId: Int, completion: @escaping (AccountStateDto?) -> Void) {
-        AccountApiService.shared.fetchUserState(movieId: movieId) { result in
+        MovieApiService.shared.getPersonDetails(id: 1, completion: {
+            [weak self] result in
+            guard let self else { return }
+            callback?(.loaded)
+            
             switch result {
-            case .success(let dto):
-                completion(dto)
-            case .failure:
-                completion(nil)
+            case .success(let persons):
+                self.persons = persons.results ?? []
+                callback?(.reload)
+            case .failure(let error):
+                callback?(.message(error.localizedDescription))
             }
-        }
+        })
     }
 }

@@ -6,12 +6,11 @@
 //
 
 import Foundation
+
 enum AccoundEndpoint: Endpoint {
     case addToWatchlist(encodable: Encodable)
-    
     case getWatchlistMovies(page: Int)
-   
-    case accountState(movieId: Int)
+    
     var accountPath: String {
         "/account/\(23254416)"
     }
@@ -21,8 +20,6 @@ enum AccoundEndpoint: Endpoint {
             return "\(accountPath)/watchlist"
         case .getWatchlistMovies:
             return "\(accountPath)/watchlist/movies"
-        case .accountState(let movieId):
-            return "\(accountPath)/watchlist?movie_id=\(movieId)"
         }
     }
     var method: HttpMethod {
@@ -30,8 +27,6 @@ enum AccoundEndpoint: Endpoint {
         case .addToWatchlist:
             .post
         case .getWatchlistMovies:
-                .get
-        case .accountState:
                 .get
         }
     }
@@ -41,9 +36,6 @@ enum AccoundEndpoint: Endpoint {
             return []
         case .getWatchlistMovies(let page):
             return [URLQueryItem(name: "page", value: "\(page)")]
-        
-        case .accountState:
-            return []
         }
     }
     var requestBody: RequestBody? {
@@ -51,8 +43,6 @@ enum AccoundEndpoint: Endpoint {
         case .addToWatchlist(let encodable):
             return .encodable(encodable)
         case .getWatchlistMovies:
-            return nil 
-        case .accountState:
             return nil
         }
     }

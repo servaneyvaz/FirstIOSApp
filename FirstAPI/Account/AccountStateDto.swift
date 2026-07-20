@@ -19,13 +19,6 @@ struct AccountStateDto: Decodable {
         case rated = "rated"
         case watchlist = "watchlist"
     }
-    
-    var isWatchlist: Bool {
-        guard let watchlist else { return false }
-        return watchlist
-    }
-    
-    
 }
 struct Rated: Decodable {
     let value: Int?
