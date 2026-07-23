@@ -1,32 +1,27 @@
 //
-//  MovieListViewModel.swift
+//  WatchlistMovieListViewModel.swift
 //  FirstAPI
 //
-//  Created by Servan on 01.07.26.
+//  Created by Servan on 21.07.26.
 //
 
 import Foundation
-enum MovieListViewState {
-    case loading
-    case loaded
-    case reload
-    case message(String)
-   
-}
-protocol MovieListViewModel: AnyObject {
+
+protocol WatchlistMovieListViewModel: AnyObject
+{
+    var movies: [MoviePresentable] { get }
     var callback: ((MovieListViewState) -> Void )? { get set }
     func getMovies()
-    func addtoWatchlist(id: Int)
-    var movies: [MoviePresentable] { get }
+    func removeMovie(id: Int)
 }
-extension MovieListViewModel {
-    func addtoWatchlist(id: Int) {
-        callback?(.loading)
+extension WatchlistMovieListViewModel {
+    
+    func removeMovie(id: Int) {
         AccountApiService.shared.addToWatchlist(
             requestModel: .init(
                 mediaType: "movie",
                 mediaId: id,
-                watchlist: true
+                watchlist: false
             ),
             completion: {
                 [weak self] result in
@@ -34,8 +29,11 @@ extension MovieListViewModel {
                 self.callback?(.loaded)
                 switch result {
                 case .success(let model):
-                    if model.success && model.statusMessage?.isEmpty == false {
+                    if model.success == true && model.statusMessage?.isEmpty == false {
                         self.callback?(.message(model.statusMessage!))
+                        self.getMovies()
+                        self.callback?(.reload)
+                       
                     }
                 case .failure(let error):
                     self.callback?(.message(error.localizedDescription))
@@ -43,4 +41,5 @@ extension MovieListViewModel {
             }
         )
     }
+    
 }

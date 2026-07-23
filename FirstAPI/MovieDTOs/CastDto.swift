@@ -52,12 +52,12 @@ struct CastMovieDto: Decodable {
         case job = "job"
     }
     
-    var profilePathUrl : String {
-        guard let profilePath else { return "" }
+    var profilePathUrl : String? {
+        guard let profilePath else { return nil }
             return "https://image.tmdb.org/t/p/w500\(profilePath)"
     }
-    var namePath : String {
-        guard let name else { return "" }
+    var namePathCast : String? {
+        guard let name else { return nil }
         return name
         
     }

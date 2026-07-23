@@ -13,7 +13,8 @@ enum MovieEndpoint: Endpoint {
     case topRated(page: Int)
     case popularMovies(page: Int)
     case trendMovies(page: Int)
-    case personDetails(id: Int)
+    case credits(movieId: Int)
+    case reviews(movieId: Int)
     var path: String {
         var path = "/movie"
         switch self {
@@ -27,8 +28,10 @@ enum MovieEndpoint: Endpoint {
             path += "/popular"
         case .trendMovies:
             path = "/trending/movie/week"
-        case .personDetails:
-            path = "/person"
+        case .credits(let movieId):
+            path = "/movie/\(movieId)/credits"
+        case .reviews(let movieId):
+            path = "/movie/\(movieId)/reviews"
         }
         return path
     }
@@ -44,7 +47,9 @@ enum MovieEndpoint: Endpoint {
             return .get
         case .trendMovies:
             return .get
-        case .personDetails:
+        case .credits:
+            return .get
+        case .reviews:
             return .get
         }
     }
@@ -60,7 +65,9 @@ enum MovieEndpoint: Endpoint {
             return [.init(name: "page", value: "\(page)")]
         case .trendMovies(page: let page):
             return [.init(name: "page", value: "\(page)")]
-        case .personDetails:
+        case .credits:
+            return []
+        case .reviews:
             return []
         }
         
@@ -77,7 +84,9 @@ enum MovieEndpoint: Endpoint {
             return nil
         case .trendMovies:
             return nil
-        case .personDetails:
+        case .credits:
+            return nil
+        case .reviews:
             return nil
         }
     }

@@ -8,11 +8,6 @@
 import Foundation
 
 final class TopRatedListViewModel: MovieListViewModel {
-    func getPerson() {
-        getPersons()
-    }
-    
-    var persons: [MoviePresentable] = []
     
     var callback: ((MovieListViewState) -> Void)?
     
@@ -22,9 +17,7 @@ final class TopRatedListViewModel: MovieListViewModel {
         topRatedConfigure()
     }
     
-    func didSelectMovie(at index: Int) {
-        addtoWatchlist(id: index)
-    }
+    
     
     func topRatedConfigure() {
         callback?(.loading)
@@ -37,25 +30,9 @@ final class TopRatedListViewModel: MovieListViewModel {
                 self.movies = movies.results ?? []
                 self.callback?(.reload)
             case .failure(let error):
-                callback?(.message(error.localizedDescription))
+                self.callback?(.message(error.localizedDescription))
             }
         })
     }
     
-    func getPersons() {
-        callback?(.loading)
-        MovieApiService.shared.getPersonDetails(id: 1, completion: {
-            [weak self] result in
-            guard let self else { return }
-            callback?(.loaded)
-            
-            switch result {
-            case .success(let persons):
-                self.persons = persons.results ?? []
-                callback?(.reload)
-            case .failure(let error):
-                callback?(.message(error.localizedDescription))
-            }
-        })
-    }
 }

@@ -19,12 +19,13 @@ final class MovieCollectionCell: UICollectionViewCell {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
-        imageView.layer.cornerRadius = 50
+        imageView.layer.cornerRadius = 75
         return imageView
     }()
     
     private lazy var castName: UILabel = {
         let label = UILabel()
+        label.textColor = .white
         label.font = .systemFont(ofSize: 14, weight: .bold)
         return label
     }()
@@ -46,12 +47,13 @@ final class MovieCollectionCell: UICollectionViewCell {
             .top(contentView.topAnchor).0
             .leading(contentView.leadingAnchor).0
             .trailing(contentView.trailingAnchor).0
-            .height(100)
-        castName
-            .top(imageView.bottomAnchor, 10).0
-            .leading(contentView.leadingAnchor).0
-            .trailing(contentView.trailingAnchor).0
             .bottom(contentView.bottomAnchor)
+            
+        castName
+            .top(castImageView.bottomAnchor, 10).0
+            .centerX(contentView.centerXAnchor)
+            
+            
             
         
     }
@@ -70,7 +72,7 @@ final class MovieCollectionCell: UICollectionViewCell {
             }
         })
     }
-    func configureCast(data: String?) {
+    func configureCast(data: String?,name: String) {
         castImageView.image = nil
         castName.text = nil
         guard let data else { return }
@@ -85,5 +87,6 @@ final class MovieCollectionCell: UICollectionViewCell {
                     print(error)
             }
         })
+        castName.text = name
     }
 }

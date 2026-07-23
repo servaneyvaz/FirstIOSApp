@@ -73,7 +73,7 @@ final class MovieDetailController: UIViewController {
     }()
     private lazy var cast: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 12, weight: .bold)
+        label.font = .systemFont(ofSize: 17, weight: .bold)
         label.text = "Cast"
         let gesture = UITapGestureRecognizer(target: self, action: #selector(tapcast))
         label.addGestureRecognizer(gesture)
@@ -106,7 +106,7 @@ final class MovieDetailController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = UIColor(named: "backColor")
         configure()
-        setupCallbacks()
+        bind()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -114,48 +114,22 @@ final class MovieDetailController: UIViewController {
         configureNavbar()
     }
     
-    private func setupCallbacks() {
-        viewModel.callback = { [weak self] state in
-            guard let self = self else { return }
-            switch state {
-            case .loading:
-                self.view.showLoading()
-            case .loaded:
-                self.view.hideLoading()
-            case .reload:
-                DispatchQueue.main.async {
-                    self.isMovieInWatchlist.toggle()
-                }
-            case .message(let text):
-                print("Mesaj: \(text)")
-            }
-        }
-    }
+    
     func configureNavbar() {
         navigationController?.setNavigationBarHidden(true, animated: false)
     }
-    private let viewModel: MovieListViewModel
-    init(viewModel: MovieListViewModel) {
+    private var viewModel: MovieDetailViewModel
+    init(viewModel: MovieDetailViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    private var movieId: Int?
-    private var isMovieInWatchlist: Bool = false {
-        didSet {
-            
-            saveButton.isSelected = isMovieInWatchlist
-            
-            saveButton.tintColor = isMovieInWatchlist ? .orange : .white
-        }
-    }
-    
-    @objc func addToWatchlist() {
-        guard let id = movieId else {return}
-        saveButton.isSelected.toggle()
-        viewModel.addtoWatchlist(id: id)
+
+    @objc func addToWatchlist(_ sender: UIButton) {
+        viewModel.toggleWatchlist()
+        sender.isSelected = viewModel.isInWatchlist
     }
     
     @objc func backToHome() {
@@ -232,13 +206,29 @@ final class MovieDetailController: UIViewController {
             .top(view.safeAreaLayoutGuide.topAnchor,20).0
             .width(25).0 .height(25)
     }
-    private var currentCastVC: CastController?
+    private lazy var pageController: DetailPageController? = {
+        guard let movieId = viewModel.movieId else { return nil }
+        let controller = DetailPageController(movieId: movieId)
+
+        addChild(controller)
+        view.addSubview(controller.view)
+        controller.didMove(toParent: self)
+
+        controller.view
+            .top(scrollLine.bottomAnchor, 15).0
+            .leading(view.leadingAnchor).0
+            .trailing(view.trailingAnchor).0
+            .bottom(view.safeAreaLayoutGuide.bottomAnchor)
+
+        controller.view.isHidden = true
+        return controller
+    }()
 
     @objc func tapabout() {
         scrollConstraint.constant = 35
         overviewLabel.isHidden = false
         
-        currentCastVC?.view.isHidden = true
+        pageController?.view.isHidden = true
         
         UIView.animate(withDuration: 0.5) {
             self.view.layoutIfNeeded()
@@ -249,97 +239,70 @@ final class MovieDetailController: UIViewController {
         scrollConstraint.constant = 163
         overviewLabel.isHidden = true
         
-        currentCastVC?.view.isHidden = true
+        pageController?.view.isHidden = false
         
+        pageController?.showPage(.review)
         UIView.animate(withDuration: 0.5) {
             self.view.layoutIfNeeded()
         }
+        
+        
+        
     }
     @objc func tapcast() {
             scrollConstraint.constant = 250
             overviewLabel.isHidden = true
-            
+            pageController?.view.isHidden = false
+            pageController?.showPage(.cast)
             UIView.animate(withDuration: 0.5) {
                 self.view.layoutIfNeeded()
             }
-            
-            if let existingCastVC = currentCastVC {
-                existingCastVC.view.isHidden = false
-                return
-            }
-        
-            let castVC = CastController(castViewModels: [self.viewModel])
-            self.currentCastVC = castVC
-            
-            addChild(castVC)
-            view.addSubview(castVC.view)
-            castVC.didMove(toParent: self)
-            
-            castVC.view
-                .top(scrollLine.bottomAnchor, 15).0
-                .leading(view.leadingAnchor).0
-                .trailing(view.trailingAnchor).0
-                .bottom(view.safeAreaLayoutGuide.bottomAnchor)
         }
-    func configure(id: Int,data: String?, data1: String?,data2: String?,data3: Double?,data4: String?,release: String?) {
-        self.movieId = id
+    private func bind() {
         backPosterView.image = nil
         posterView.image = nil
-        ratingLabel.text = nil
-        posterLabel.text = nil
-        overviewLabel.text = nil
-        guard let data else { return }
-        NetworkManager.shared.loadData(urlString: data, completion: {
-            [weak self] result in
-            guard let self else { return }
-            switch result {
-                
-            case .success(let data):
-                self.backPosterView.image = UIImage(data: data)
-                
-            case .failure(let error):
-                    print(error)
-            }
-        })
-        guard let data1 else { return }
-        NetworkManager.shared.loadData(urlString: data1, completion: {
-            [weak self] result in
-            guard let self else { return }
-            switch result {
-                
-            case .success(let data):
-                self.posterView.image = UIImage(data: data)
-            case .failure(let error):
-                print(error)
-            }
-        })
-        if let data2 {
-            posterLabel.text = data2
-        }
-        if let data3 {
-            let rating = (data3 * 10).rounded()/10
-            ratingLabel.text = "\(rating)"
-        }
-        if let data4 {
-            overviewLabel.text = data4
-        }
-        if let release {
-            releaseText.text = release
-        }
-        viewModel.getPerson()
-        
+
+        posterLabel.text = viewModel.title
+        ratingLabel.text = viewModel.ratingText
+        overviewLabel.text = viewModel.overview
+        releaseText.text = viewModel.releaseYear
+        saveButton.isSelected = viewModel.isInWatchlist
+
         viewModel.callback = { [weak self] state in
             guard let self else { return }
             switch state {
-            case .reload:
-                DispatchQueue.main.async {
-                    print("Cast datası uğurla yükləndi: \(self.viewModel.persons.count) nəfər")
-                }
-            default:
-                break
+            case .watchlistChanged(let isInWatchlist):
+                self.saveButton.isSelected = isInWatchlist
+            case .message(let text):
+                print("Watchlist xətası: \(text)")
             }
         }
-        
+
+        if let backdropURL = viewModel.backdropURL {
+            NetworkManager.shared.loadData(urlString: backdropURL, completion: { [weak self] result in
+                guard let self else { return }
+                switch result {
+                case .success(let data):
+                    self.backPosterView.image = UIImage(data: data)
+                case .failure(let error):
+                    print(error)
+                }
+            })
+        }
+
+        if let posterURL = viewModel.posterURL {
+            NetworkManager.shared.loadData(urlString: posterURL, completion: { [weak self] result in
+                guard let self else { return }
+                switch result {
+                case .success(let data):
+                    self.posterView.image = UIImage(data: data)
+                case .failure(let error):
+                    print(error)
+                }
+            })
+        }
     }
+
     private var scrollConstraint: NSLayoutConstraint!
 }
+

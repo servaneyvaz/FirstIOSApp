@@ -8,11 +8,6 @@
 import Foundation
 
 final class TrendMovieListViewModel: MovieListViewModel {
-    func getPerson() {
-        getPersons()
-    }
-    
-    var persons: [MoviePresentable] = []
     
     var callback: ((MovieListViewState) -> Void)?
     
@@ -23,9 +18,7 @@ final class TrendMovieListViewModel: MovieListViewModel {
     }
     
 
-    func didSelectMovie(at index: Int) {
-        addtoWatchlist(id: index)
-    }
+    
     
     func trendingMoviesConfigure() {
         callback?(.loading)
@@ -38,26 +31,10 @@ final class TrendMovieListViewModel: MovieListViewModel {
                 self.movies = movies.results ?? []
                 self.callback?(.reload)
             case .failure(let error):
-                callback?(.message(error.localizedDescription))
+                self.callback?(.message(error.localizedDescription))
             }
         })
 
     }
     
-    func getPersons() {
-        callback?(.loading)
-        MovieApiService.shared.getPersonDetails(id: 1, completion: {
-            [weak self] result in
-            guard let self else { return }
-            callback?(.loaded)
-            
-            switch result {
-            case .success(let persons):
-                self.persons = persons.results ?? []
-                callback?(.reload)
-            case .failure(let error):
-                callback?(.message(error.localizedDescription))
-            }
-        })
-    }
 }

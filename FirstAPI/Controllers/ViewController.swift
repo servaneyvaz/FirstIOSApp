@@ -105,13 +105,15 @@ class ViewController: UIViewController {
     }()
     
     private let viewModel: [MovieListViewModel]
+    private let watchlistmodel: WatchlistMovieListViewModel
     private var scrollConstraint: NSLayoutConstraint!
     
  
     private var selectedIndex: Int = 0
     
-    init(viewModel: [MovieListViewModel]) {
+    init(viewModel: [MovieListViewModel], watchlistmodel: WatchlistMovieListViewModel) {
         self.viewModel = viewModel
+        self.watchlistmodel = watchlistmodel
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -126,8 +128,6 @@ class ViewController: UIViewController {
         navigationController?.setNavigationBarHidden(true, animated: false)
         configure()
         callBackConfigure()
-        
-        
         viewModel.forEach { $0.getMovies() }
     }
     
@@ -284,22 +284,18 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFl
         if collectionView == collection4 {
             currentViewModel = viewModel[4]
             movie = viewModel[4].movies[indexPath.item]
+            
         } else {
             currentViewModel = viewModel[selectedIndex]
             movie = viewModel[selectedIndex].movies[indexPath.item]
         }
         
-        let controller = MovieDetailController(viewModel: currentViewModel)
-        navigationController?.pushViewController(controller, animated: true)
-        
-        controller.configure(
-            id: movie.id ?? 0,
-            data: movie.backdropPathURL,
-            data1: movie.posterPathUrl,
-            data2: movie.posterTitle,
-            data3: movie.ratingAverage,
-            data4: movie.aboutmovie, release: movie.releaseDate?.split(separator: "-").first.map(String.init)
-            
+        let detailViewModel = DefaultMovieDetailViewModel(
+            movie: movie,
+            listViewModel: currentViewModel,
+            watchlistModel: WatchListViewModel()
         )
+        let controller = MovieDetailController(viewModel: detailViewModel)
+        navigationController?.pushViewController(controller, animated: true)
     }
 }

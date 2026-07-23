@@ -16,7 +16,9 @@ protocol MoviePresentable {
     var aboutmovie: String? { get }
     var releaseDate: String? { get }
     var watchlist: Bool? { get }
-    var profilePath: String? { get }
+    var profilePathURL: String? { get }
+    var namePath: String? { get }
+    var contentOfMovie: String? { get }
 }
 extension MovieDto: MoviePresentable {
     
@@ -39,6 +41,7 @@ extension PopularMovieList: MoviePresentable {
     
 }
 extension MoviePresentable {
+    var id: Int? { return nil }
     var posterPathUrl: String? { return "" }
     var backdropPathURL: String? { return "" }
     var posterTitle: String? { return "" }
@@ -46,15 +49,23 @@ extension MoviePresentable {
     var aboutmovie: String? { return nil }
     var watchlist: Bool? { return nil }
     var releaseDate: String? { return nil }
-    var profilePath: String? { return nil }
+    var profilePathURL: String? { return nil }
+    var namePath: String? { return nil }
+    var contentOfMovie: String? { return nil }
 }
-extension CastMovieDto: MoviePresentable {
-    
-    
-}
+
 extension AccountStateDto: MoviePresentable {
     
 }
-extension DetailPersonDto: MoviePresentable {
+extension CastMovieDto: MoviePresentable {
+    var profilePathURL: String? {
+        return self.profilePathUrl
+    }
+    var namePath: String? {
+        return self.namePathCast
+    }
+}
+
+extension ReviewListView: MoviePresentable {
     
 }

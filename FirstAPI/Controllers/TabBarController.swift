@@ -20,7 +20,9 @@ final class TabBarController: UITabBarController {
                 TopRatedListViewModel(),
                 PopularListViewModel(),
                 TrendMovieListViewModel()
-            ]
+            ],
+            
+            watchlistmodel: WatchListViewModel()
         )
         vc.tabBarItem = UITabBarItem(title: "Home", image: nil, tag: 0)
         return vc

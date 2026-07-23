@@ -24,10 +24,12 @@ final class WatchListController: UIViewController {
         view.backgroundColor = UIColor(named: "backColor")
         setupUI()
         setupCallbacks()
+      
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         viewModel.getMovies()
+        
     }
     private func setupUI() {
         view.addSubview(collection)
@@ -84,9 +86,14 @@ extension WatchListController: UICollectionViewDelegate, UICollectionViewDataSou
         return 16
     }
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let controller = MovieDetailController(viewModel: self.viewModel)
+        let movie = viewModel.movies[indexPath.item]
+        let detailViewModel = DefaultMovieDetailViewModel(
+            movie: movie,
+            listViewModel: nil,
+            watchlistModel: viewModel,
+            isInWatchlist: true
+        )
+        let controller = MovieDetailController(viewModel: detailViewModel)
         navigationController?.pushViewController(controller, animated: true)
-        controller.configure(id: viewModel.movies[indexPath.item].id ?? 0, data: viewModel.movies[indexPath.item].backdropPathURL, data1: viewModel.movies[indexPath.item].posterPathUrl, data2: viewModel.movies[indexPath.item].posterTitle, data3: viewModel.movies[indexPath.item].ratingAverage, data4: viewModel
-            .movies[indexPath.item].aboutmovie, release: viewModel.movies[indexPath.item].releaseDate?.split(separator: "-").first.map(String.init))
     }
 }

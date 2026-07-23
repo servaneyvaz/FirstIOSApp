@@ -1,41 +1,73 @@
 import UIKit
 
-class CastController: UIViewController {
-    
-    
-    private let castViewModels: [MovieListViewModel]
-   
+enum DetailPage {
+    case cast
+    case review
+}
+
+class DetailPageController: UIViewController {
+
+    private let viewModel: CastListViewModel
+    private let viewModelReview: ReviewViewModel
     private var pages: [UIViewController] = []
+    private let castVC = CastViewController()
+    private let reviewVC = ReviewController()
+    private var currentPage: DetailPage = .review
     
-  
-    init(castViewModels: [MovieListViewModel]) {
-        self.castViewModels = castViewModels
+    init(movieId: Int) {
+        self.viewModel = DefaultCastListViewModel(movieId: movieId)
+        self.viewModelReview = DefaultReviewViewModel(movieId: movieId)
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupPages()
         configure()
+        setupPages()
+        bind()
+        viewModel.getCast()
+        viewModelReview.getReviews()
     }
-    
+
     private lazy var pageViewController: UIPageViewController = {
         let pageViewController = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+        pageViewController.dataSource = self
         return pageViewController
     }()
-    
+
     private func setupPages() {
-        let castVC = CastViewController(castList: castViewModels.first?.persons ?? [])
-        pages = [castVC]
-        
-        if let firstPage = pages.first {
-            pageViewController.setViewControllers([firstPage], direction: .forward, animated: false, completion: nil)
+        pages = [castVC,reviewVC]
+        pageViewController.setViewControllers([reviewVC], direction: .forward, animated: false, completion: nil)
+    }
+    func showPage(_ page: DetailPage) {
+        guard page != currentPage else { return }
+        let targetVC: UIViewController = page == .cast ? castVC : reviewVC
+        let direction: UIPageViewController.NavigationDirection = page == .cast ? .forward : .reverse
+        currentPage = page
+        pageViewController.setViewControllers([targetVC], direction: direction, animated: true, completion: nil)
+    }
+
+    private func bind() {
+        viewModel.callback = { [weak self] state in
+            guard let self else { return }
+            switch state {
+            case .loading, .loaded:
+                break
+            case .reload:
+                DispatchQueue.main.async {
+                    self.castVC.update(with: self.viewModel.cast)
+                    self.reviewVC.update(with: self.viewModelReview.review)
+                }
+            case .message(let text):
+                print("Xəta: \(text)")
+            }
         }
     }
+
     func configure() {
         addChild(pageViewController)
         view.addSubviews(pageViewController.view)
@@ -49,12 +81,26 @@ class CastController: UIViewController {
                 .bottom(view.bottomAnchor)
     }
 }
+
+extension DetailPageController: UIPageViewControllerDataSource {
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+        guard let index = pages.firstIndex(of: viewController), index > 0 else { return nil }
+        currentPage = pages[index - 1] === castVC ? .cast : .review
+        return pages[index - 1]
+    }
+
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+        guard let index = pages.firstIndex(of: viewController), index < pages.count - 1 else { return nil }
+        currentPage = pages[index + 1] === castVC ? .cast : .review
+        return pages[index + 1]
+    }
+}
+
 final class CastViewController: UIViewController {
     
     private var castList: [MoviePresentable] = []
     
-    init(castList: [MoviePresentable]) {
-        self.castList = castList
+    init() {
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -72,9 +118,14 @@ final class CastViewController: UIViewController {
         castCollection.reloadData()
     }
     
+    func update(with cast: [MoviePresentable]) {
+        castList = cast
+        castCollection.reloadData()
+    }
+    
     private lazy var castCollection: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .horizontal
+        layout.scrollDirection = .vertical
         let collection = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collection.register(MovieCollectionCell.self, forCellWithReuseIdentifier: "cast")
         collection.backgroundColor = .clear
@@ -84,8 +135,8 @@ final class CastViewController: UIViewController {
     func configure() {
         view.addSubviews(castCollection)
         castCollection
-            .leading(view.leadingAnchor).0
-            .trailing(view.trailingAnchor).0
+            .leading(view.leadingAnchor,24).0
+            .trailing(view.trailingAnchor,-24).0
             .bottom(view.bottomAnchor).0
             .top(view.topAnchor)
     }
@@ -103,7 +154,7 @@ extension CastViewController: UICollectionViewDataSource, UICollectionViewDelega
         if indexPath.row < castList.count {
             let person = castList[indexPath.row]
             if let cell = cell as? MovieCollectionCell {
-                cell.configureCast(data: person.profilePath)
+                cell.configureCast(data: person.profilePathURL, name: person.namePath ?? "0")
             }
         }
         
@@ -111,15 +162,15 @@ extension CastViewController: UICollectionViewDataSource, UICollectionViewDelega
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let height = collectionView.frame.height > 20 ? collectionView.frame.height - 20 : 100
-        return CGSize(width: height * 0.8, height: height)
+        
+        return CGSize(width: 150, height: 150)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        return 12
+        return 24
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return 16
+        return 34
     }
 }
