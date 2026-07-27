@@ -10,34 +10,52 @@ final class WatchListController: UIViewController {
         collection.register(MovieCollectionCell.self, forCellWithReuseIdentifier: "cell")
         return collection
     }()
+    private lazy var emptyWatchlistImage: UIImageView = {
+        let image = UIImageView(image: UIImage(named: "emptywatchlist"))
+        image.contentMode = .scaleAspectFit
+        image.isHidden = true
+        return image
+    }()
     private let viewModel: WatchListViewModel
     
     init(viewModel: WatchListViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(named: "backColor")
         setupUI()
         setupCallbacks()
-      
+        updateEmptyState()
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         viewModel.getMovies()
-        
+       
+    }
+    private func updateEmptyState() {
+        let isEmpty = viewModel.movies.isEmpty
+        emptyWatchlistImage.isHidden = !isEmpty
+        collection.isHidden = isEmpty
     }
     private func setupUI() {
-        view.addSubview(collection)
+        view.addSubviews(collection,emptyWatchlistImage)
         collection
             .top(view.safeAreaLayoutGuide.topAnchor, 20).0
             .leading(view.safeAreaLayoutGuide.leadingAnchor, 24).0
             .trailing(view.safeAreaLayoutGuide.trailingAnchor, -24).0
             .bottom(view.safeAreaLayoutGuide.bottomAnchor)
+        emptyWatchlistImage
+            .centerX(view.centerXAnchor).0
+            .centerY(view.centerYAnchor).0
+            .height(300).0
+            .width(300)
     }
     private func setupCallbacks() {
         viewModel.callback = { [weak self] state in
@@ -49,7 +67,9 @@ final class WatchListController: UIViewController {
                 self.view.hideLoading()
             case .reload:
                 DispatchQueue.main.async {
+                    self.updateEmptyState()
                     self.collection.reloadData()
+                    
                 }
             case .message(let text):
                 print("Watchlist xətası və ya mesajı: \(text)")
@@ -58,7 +78,6 @@ final class WatchListController: UIViewController {
     }
 }
 
-// MARK: - UICollectionView DataSource & Delegate
 extension WatchListController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return 1

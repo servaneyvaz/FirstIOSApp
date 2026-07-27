@@ -15,6 +15,7 @@ enum MovieEndpoint: Endpoint {
     case trendMovies(page: Int)
     case credits(movieId: Int)
     case reviews(movieId: Int)
+    case accountState(movieId: Int)
     var path: String {
         var path = "/movie"
         switch self {
@@ -32,6 +33,8 @@ enum MovieEndpoint: Endpoint {
             path = "/movie/\(movieId)/credits"
         case .reviews(let movieId):
             path = "/movie/\(movieId)/reviews"
+        case .accountState(let movieId):
+            path = "/movie/\(movieId)/account_states"
         }
         return path
     }
@@ -51,6 +54,8 @@ enum MovieEndpoint: Endpoint {
             return .get
         case .reviews:
             return .get
+        case .accountState:
+            return .get
         }
     }
     var query: [URLQueryItem] {
@@ -68,6 +73,8 @@ enum MovieEndpoint: Endpoint {
         case .credits:
             return []
         case .reviews:
+            return []
+        case .accountState:
             return []
         }
         
@@ -87,6 +94,8 @@ enum MovieEndpoint: Endpoint {
         case .credits:
             return nil
         case .reviews:
+            return nil
+        case .accountState:
             return nil
         }
     }

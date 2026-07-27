@@ -266,12 +266,12 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFl
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if collectionView == collection4 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell4", for: indexPath) as! MovieCollectionCell
-            let movie = viewModel[4].movies[indexPath.row]
+            let movie = viewModel[4].movies[indexPath.item]
             cell.configure(data: movie.posterPathUrl)
             return cell
         } else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "mainCell", for: indexPath) as! MovieCollectionCell
-            let movie = viewModel[selectedIndex].movies[indexPath.row]
+            let movie = viewModel[selectedIndex].movies[indexPath.item]
             cell.configure(data: movie.posterPathUrl)
             return cell
         }
@@ -287,7 +287,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFl
             
         } else {
             currentViewModel = viewModel[selectedIndex]
-            movie = viewModel[selectedIndex].movies[indexPath.item]
+            movie = currentViewModel.movies[indexPath.item]
         }
         
         let detailViewModel = DefaultMovieDetailViewModel(

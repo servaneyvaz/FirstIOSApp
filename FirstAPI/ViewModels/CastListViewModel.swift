@@ -31,7 +31,7 @@ final class DefaultCastListViewModel: CastListViewModel {
             self.callback?(.loaded)
             switch result {
             case .success(let dto):
-                self.cast = dto.cast?.map { $0 as MoviePresentable } ?? []
+                self.cast = dto.cast?.filter { $0.name != nil && $0.profilePath != nil } ?? []
                 self.callback?(.reload)
             case .failure(let error):
                 self.callback?(.message(error.localizedDescription))

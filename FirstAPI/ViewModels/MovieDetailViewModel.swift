@@ -16,7 +16,7 @@ protocol MovieDetailViewModel {
     var overview: String? { get }
     var releaseYear: String? { get }
     var movieId: Int? { get }
-    var isInWatchlist: Bool { get }
+    var isInWatchlist: Bool? { get set }
     func toggleWatchlist()
 }
 
@@ -26,11 +26,13 @@ enum MovieDetailViewState {
 }
 
 final class DefaultMovieDetailViewModel: MovieDetailViewModel {
+    var isInWatchlist: Bool?
+    
     
     
     var callback: ((MovieDetailViewState) -> Void)?
-    private(set) var isInWatchlist: Bool
-
+ 
+   
     private let movie: MoviePresentable
     private let listViewModel: MovieListViewModel?
     private let watchlistModel: WatchlistMovieListViewModel?
@@ -61,12 +63,15 @@ final class DefaultMovieDetailViewModel: MovieDetailViewModel {
 
     func toggleWatchlist() {
         guard let id = movie.id else { return }
-        isInWatchlist.toggle()
-        if isInWatchlist {
+        isInWatchlist?.toggle()
+        if isInWatchlist ?? true {
             listViewModel?.addtoWatchlist(id: id)
         } else {
             watchlistModel?.removeMovie(id: id)
+            
         }
-        callback?(.watchlistChanged(isInWatchlist))
+        callback?(.watchlistChanged(isInWatchlist ?? false))
     }
+    
+    
 }

@@ -101,14 +101,28 @@ final class MovieDetailController: UIViewController {
         label.numberOfLines = 0
         return label
     }()
-    
+    private var isWatchlist: Bool?
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(named: "backColor")
         configure()
         bind()
+        getIsInWatchlist()
     }
-    
+    func getIsInWatchlist(){
+        guard let id = viewModel.movieId else { return }
+        MovieApiService.shared.getAccountState(movieId: id, completion: {
+            [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .success(let dto):
+                self.viewModel.isInWatchlist = dto.watchlist
+                self.configureSaveButton()
+            case .failure(let error):
+                print(error.localizedDescription)
+            }
+        })
+    }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         configureNavbar()
@@ -127,9 +141,20 @@ final class MovieDetailController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    
+    private func configureSaveButton() {
+        saveButton.setImage(UIImage(named: "save")?.withRenderingMode(.alwaysOriginal).withTintColor(UIColor.white), for: .normal)
+        saveButton.setImage(UIImage(named: "saved")?.withRenderingMode(.alwaysOriginal).withTintColor(UIColor.white), for: .selected
+        )
+        saveButton.addTarget(self, action: #selector(addToWatchlist), for: .touchUpInside)
+        saveButton.isSelected = viewModel.isInWatchlist ?? false
+        
+    }
     @objc func addToWatchlist(_ sender: UIButton) {
         viewModel.toggleWatchlist()
-        sender.isSelected = viewModel.isInWatchlist
+        if !sender.isSelected {
+            backToHome()
+        }
     }
     
     @objc func backToHome() {
@@ -144,10 +169,8 @@ final class MovieDetailController: UIViewController {
     }()
     private lazy var saveButton: UIButton = {
         let customSaveButton = UIButton()
-        customSaveButton.setImage(UIImage(named: "save")?.withRenderingMode(.alwaysOriginal).withTintColor(UIColor.white), for: .normal)
-        customSaveButton.setImage(UIImage(named: "saved")?.withRenderingMode(.alwaysOriginal).withTintColor(UIColor.white), for: .selected
-        )
-        customSaveButton.addTarget(self, action: #selector(addToWatchlist), for: .touchUpInside)
+        
+        
         return customSaveButton
     }()
     func configure() {
@@ -225,38 +248,38 @@ final class MovieDetailController: UIViewController {
     }()
 
     @objc func tapabout() {
-        scrollConstraint.constant = 35
+        
+        UIView.animate(withDuration: 0.5) {
+            self.scrollConstraint.constant = 35
+            self.view.layoutIfNeeded()
+        }
         overviewLabel.isHidden = false
         
         pageController?.view.isHidden = true
-        
-        UIView.animate(withDuration: 0.5) {
-            self.view.layoutIfNeeded()
-        }
+       
     }
     
     @objc func tapreview() {
-        scrollConstraint.constant = 163
+        UIView.animate(withDuration: 0.5) {
+            self.scrollConstraint.constant = 163
+            self.view.layoutIfNeeded()
+        }
         overviewLabel.isHidden = true
         
         pageController?.view.isHidden = false
         
         pageController?.showPage(.review)
-        UIView.animate(withDuration: 0.5) {
-            self.view.layoutIfNeeded()
-        }
-        
-        
         
     }
     @objc func tapcast() {
-            scrollConstraint.constant = 250
+        UIView.animate(withDuration: 0.5) {
+            self.scrollConstraint.constant = 250
+            self.view.layoutIfNeeded()
+        }
             overviewLabel.isHidden = true
             pageController?.view.isHidden = false
             pageController?.showPage(.cast)
-            UIView.animate(withDuration: 0.5) {
-                self.view.layoutIfNeeded()
-            }
+            
         }
     private func bind() {
         backPosterView.image = nil
@@ -266,7 +289,7 @@ final class MovieDetailController: UIViewController {
         ratingLabel.text = viewModel.ratingText
         overviewLabel.text = viewModel.overview
         releaseText.text = viewModel.releaseYear
-        saveButton.isSelected = viewModel.isInWatchlist
+        saveButton.isSelected = viewModel.isInWatchlist ?? false
 
         viewModel.callback = { [weak self] state in
             guard let self else { return }

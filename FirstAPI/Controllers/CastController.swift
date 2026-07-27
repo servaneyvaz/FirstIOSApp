@@ -35,7 +35,7 @@ class DetailPageController: UIViewController {
 
     private lazy var pageViewController: UIPageViewController = {
         let pageViewController = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
-        pageViewController.dataSource = self
+//        pageViewController.dataSource = self
         return pageViewController
     }()
 
@@ -81,20 +81,20 @@ class DetailPageController: UIViewController {
                 .bottom(view.bottomAnchor)
     }
 }
-
-extension DetailPageController: UIPageViewControllerDataSource {
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        guard let index = pages.firstIndex(of: viewController), index > 0 else { return nil }
-        currentPage = pages[index - 1] === castVC ? .cast : .review
-        return pages[index - 1]
-    }
-
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-        guard let index = pages.firstIndex(of: viewController), index < pages.count - 1 else { return nil }
-        currentPage = pages[index + 1] === castVC ? .cast : .review
-        return pages[index + 1]
-    }
-}
+//
+//extension DetailPageController: UIPageViewControllerDataSource {
+//    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+//        guard let index = pages.firstIndex(of: viewController), index > 0 else { return nil }
+//        currentPage = pages[index - 1] === castVC ? .cast : .review
+//        return pages[index - 1]
+//    }
+//
+//    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+//        guard let index = pages.firstIndex(of: viewController), index < pages.count - 1 else { return nil }
+//        currentPage = pages[index + 1] === castVC ? .cast : .review
+//        return pages[index + 1]
+//    }
+//}
 
 final class CastViewController: UIViewController {
     

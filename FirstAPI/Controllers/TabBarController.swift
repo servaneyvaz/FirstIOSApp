@@ -24,12 +24,17 @@ final class TabBarController: UITabBarController {
             
             watchlistmodel: WatchListViewModel()
         )
-        vc.tabBarItem = UITabBarItem(title: "Home", image: nil, tag: 0)
+        vc.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), tag: 0)
         return vc
     }()
     private lazy var wlcontroller: UIViewController = {
         let vc = WatchListController(viewModel: WatchListViewModel())
-        vc.tabBarItem = UITabBarItem(title: "WatchList", image: nil, tag: 0)
+        
+        let icon = UIImage(named: "save")?
+            .resized(to: CGSize(width: 24, height: 24))
+            .withRenderingMode(.alwaysTemplate)
+        
+        vc.tabBarItem = UITabBarItem(title: "WatchList", image: icon, tag: 1)
         return vc
     }()
 }

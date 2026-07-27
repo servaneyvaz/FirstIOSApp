@@ -13,8 +13,21 @@ final class ReviewController: UIViewController {
     func update(with review: [MoviePresentable]) {
         self.reviewList = review
         reviewCollectionView.reloadData()
+        if reviewList.isEmpty {
+            label.isHidden = false
+        }
+        else {
+            label.isHidden = true
+        }
     }
-    
+    private lazy var label: UILabel = {
+        let label = UILabel()
+        label.text = "No Review"
+       
+        label.textColor = .white
+        label.font = .systemFont(ofSize: 30, weight: .bold)
+        return label
+    }()
     
     
     private lazy var reviewCollectionView: UICollectionView = {
@@ -32,15 +45,18 @@ final class ReviewController: UIViewController {
         configure()
         reviewCollectionView.reloadData()
     }
+   
    func configure() {
-        view.addSubviews(reviewCollectionView)
+        view.addSubviews(label,reviewCollectionView)
         
        reviewCollectionView
            .top(view.safeAreaLayoutGuide.topAnchor).0
            .leading(view.leadingAnchor).0
            .trailing(view.trailingAnchor).0
            .bottom(view.safeAreaLayoutGuide.bottomAnchor)
-        
+       label
+           .centerX(view.centerXAnchor).0
+           .centerY(view.centerYAnchor)
     }
 }
 extension ReviewController: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
@@ -51,7 +67,7 @@ extension ReviewController: UICollectionViewDataSource, UICollectionViewDelegate
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "reviewcell", for: indexPath)
         if let cell = cell as? ReviewCell {
-            cell.configureData(content: reviewList[indexPath.item].contentOfMovie ?? "")
+            cell.configureData(content: reviewList[indexPath.item].contentOfMovie ?? "No Review")
         }
         return cell
     }

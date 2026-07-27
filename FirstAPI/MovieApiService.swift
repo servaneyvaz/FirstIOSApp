@@ -32,4 +32,11 @@ final class MovieApiService {
     func getReviews(movieId: Int, completion: @escaping (Result<ReviewDto, Error>) -> Void) {
         NetworkManager.shared.request(endpoint: MovieEndpoint.reviews(movieId: movieId), completion: completion)
     }
+    func getAccountState(movieId: Int, completion: @escaping (Result<AccountStateDto, Error>) -> Void ) {
+        NetworkManager.shared.request(
+            endpoint: MovieEndpoint
+                .accountState(movieId: movieId),
+            completion: completion
+        )
+    }
 }
