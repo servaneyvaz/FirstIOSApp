@@ -65,4 +65,5 @@ fastlane/test_output
 
 *.xcworkspace
 
+xcuserdata/
 
